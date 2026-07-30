@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "490061363808",
+    "project_id": "quizhub321",
+    "storage_bucket": "quizhub321.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490061363808:android:7563b7c8d943a23e2c6105",
+        "android_client_info": {
+          "package_name": "com.company.firstapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSnzYWallELWAfXiv3ESoXZJFEwpr5JQg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490061363808:android:35102227e59ec4712c6105",
+        "android_client_info": {
+          "package_name": "com.example.quizhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSnzYWallELWAfXiv3ESoXZJFEwpr5JQg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490061363808:android:572b1b5e9749ac552c6105",
+        "android_client_info": {
+          "package_name": "com.example.todovalidate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSnzYWallELWAfXiv3ESoXZJFEwpr5JQg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
