@@ -7,7 +7,8 @@ import 'package:todovalidate/core/theme/theme.dart';
 import 'package:todovalidate/core/injection_container.dart';  
 import 'package:todovalidate/core/autoroutes/routes.dart';
 import 'package:todovalidate/core/autoroutes/authguard.dart';
-import 'package:todovalidate/firebase_options.dart';
+import 'package:todovalidate/core/firebase_options.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
