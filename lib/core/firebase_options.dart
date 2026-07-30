@@ -4,10 +4,7 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-/// Default [FirebaseOptions] 
-/// 
-/// 
-/// for use with your Firebase apps.
+/// Default [FirebaseOptions] for use with your Firebase apps.
 ///
 /// Example:
 /// ```dart
@@ -47,39 +44,38 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDL0X6nmIacH7Ersiu6OIVEOIwAY_Mcr1g',
-    appId: '1:490061363808:web:3663ebc8b72093842c6105',
-    messagingSenderId: '490061363808',
-    projectId: 'quizhub321',
-    authDomain: 'quizhub321.firebaseapp.com',
-    storageBucket: 'quizhub321.firebasestorage.app',
-    measurementId: 'G-PF0VDKNK9Q',
+    apiKey: 'AIzaSyBt-dqCX6sR72jXLQLKqABYzfDeNlyYF3s',
+    appId: '1:943787935354:web:41fe408f907c8e349c9dc3',
+    messagingSenderId: '943787935354',
+    projectId: 'todo-list-f89f6',
+    authDomain: 'todo-list-f89f6.firebaseapp.com',
+    storageBucket: 'todo-list-f89f6.firebasestorage.app',
+    measurementId: 'G-E3BTTPZ4QY',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDSnzYWallELWAfXiv3ESoXZJFEwpr5JQg',
-    appId: '1:490061363808:android:572b1b5e9749ac552c6105',
-    messagingSenderId: '490061363808',
-    projectId: 'quizhub321',
-    storageBucket: 'quizhub321.firebasestorage.app',
+    apiKey: 'AIzaSyCb4W-4YStgPVFB4S6ORDq9xOWBEefpJBk',
+    appId: '1:943787935354:android:d267b32a7e7a1d4f9c9dc3',
+    messagingSenderId: '943787935354',
+    projectId: 'todo-list-f89f6',
+    storageBucket: 'todo-list-f89f6.firebasestorage.app',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBLMVnGyGP04S8dCnsDTwc0MI7J_slpJhg',
-    appId: '1:490061363808:ios:c82bb672a3bda97e2c6105',
-    messagingSenderId: '490061363808',
-    projectId: 'quizhub321',
-    storageBucket: 'quizhub321.firebasestorage.app',
+    apiKey: 'AIzaSyDKSzRiPQLXU729Mt7q4twFm7PAA69HpJg',
+    appId: '1:943787935354:ios:6337a0c1b6c7987c9c9dc3',
+    messagingSenderId: '943787935354',
+    projectId: 'todo-list-f89f6',
+    storageBucket: 'todo-list-f89f6.firebasestorage.app',
     iosBundleId: 'com.example.todovalidate',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDL0X6nmIacH7Ersiu6OIVEOIwAY_Mcr1g',
-    appId: '1:490061363808:web:0df88c6b4de0deb32c6105',
-    messagingSenderId: '490061363808',
-    projectId: 'quizhub321',
-    authDomain: 'quizhub321.firebaseapp.com',
-    storageBucket: 'quizhub321.firebasestorage.app',
-    measurementId: 'G-FXVY119ER9',
+    apiKey: 'AIzaSyBt-dqCX6sR72jXLQLKqABYzfDeNlyYF3s',
+    appId: '1:943787935354:web:8b2609fd3c1cd0529c9dc3',
+    messagingSenderId: '943787935354',
+    projectId: 'todo-list-f89f6',
+    authDomain: 'todo-list-f89f6.firebaseapp.com',
+    storageBucket: 'todo-list-f89f6.firebasestorage.app',
+    measurementId: 'G-FYSTMDFE89',
   );
 }
