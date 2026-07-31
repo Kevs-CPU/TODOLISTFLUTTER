@@ -8,7 +8,7 @@ import 'package:todovalidate/domain/usecases/dashboard/add_task_usecase.dart';
 import 'package:todovalidate/domain/usecases/dashboard/remove_task_usecase.dart';
 import 'package:todovalidate/domain/usecases/dashboard/update_task_usecase.dart';
 import 'package:todovalidate/domain/usecases/dashboard/get_all_tasks_usecase.dart';
-import 'package:todovalidate/auth_use_case_provider.dart';
+import 'package:todovalidate/app/providers/auth_use_case_provider.dart';
 import 'package:todovalidate/core/injection_container.dart';
 
 const String repositoryType = 'firebase';

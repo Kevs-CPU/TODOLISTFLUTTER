@@ -4,11 +4,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
     <application
-        android:label="todovalidate"
+        android:label="TodoList"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         
-        <!-- ✅ RECAPTCHA SITE KEY - IDINAGDAG ITO -->
         <meta-data
             android:name="firebase_authentication_recaptcha_site_key"
             android:value="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"/>
