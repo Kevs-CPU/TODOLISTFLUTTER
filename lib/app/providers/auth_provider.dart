@@ -49,7 +49,7 @@ class AuthProvider extends ChangeNotifier {
   void _initDependencies() {
     try {
       if (!serviceLocator.isRegistered<AuthRepository>()) {
-        debugPrint('[AuthProvider]  WARNING: serviceLocator not ready!');
+        debugPrint('[AuthProvider] WARNING: serviceLocator not ready!');
         return;
       }
 
@@ -63,10 +63,9 @@ class AuthProvider extends ChangeNotifier {
       _saveUserProfileUseCase = serviceLocator<SaveUserProfileUseCase>();
       _updateVerifiedEmailUseCase = serviceLocator<UpdateVerifiedEmailUseCase>();
       
-      debugPrint('[AuthProvider]  Dependencies initialized successfully');
+      debugPrint('[AuthProvider] Dependencies initialized successfully');
     } catch (e) {
-      debugPrint('[AuthProvider]  Failed to initialize dependencies: $e');
-      // Don't rethrow - let the app continue
+      debugPrint('[AuthProvider] Failed to initialize dependencies: $e');
     }
   }
 
@@ -81,6 +80,76 @@ class AuthProvider extends ChangeNotifier {
   String get verifiedEmail => _verifiedEmail;
   bool get emailVerified => _emailVerified;
   bool get isAuthenticated => _user != null;
+
+  // =====================================================
+  // VALIDATION RULES
+  // =====================================================
+
+  static String? validateUsername(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Username is required';
+    }
+    if (value.length < 3 || value.length > 20) {
+      return 'Username must be 3-20 characters';
+    }
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+      return 'Username can only contain letters, numbers, and underscores';
+    }
+    return null;
+  }
+
+  static String? validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Please enter a valid email address';
+    }
+    return null;
+  }
+
+  static String? validatePassword(String? value, {bool isRegistering = false}) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    if (isRegistering && value.length < 8) {
+      return 'Password must be at least 8 characters for registration';
+    }
+    return null;
+  }
+
+  // =====================================================
+  // ERROR CLEANING
+  // =====================================================
+
+  static String cleanErrorMessage(String message) {
+    String cleanMessage = message
+        .replaceAll('AuthFailure', '')
+        .replaceAll('ValidationFailure', '')
+        .replaceAll('ServerFailure', '')
+        .replaceAll('NetworkFailure', '')
+        .replaceAll('Exception:', '')
+        .replaceAll('Failure:', '')
+        .replaceAll('( ', '')
+        .replaceAll(' )', '')
+        .trim();
+
+    if (cleanMessage.startsWith('(') && cleanMessage.endsWith(')')) {
+      cleanMessage = cleanMessage.substring(1, cleanMessage.length - 1).trim();
+    }
+
+    if (cleanMessage.isEmpty) {
+      return 'An error occurred. Please try again.';
+    }
+
+    return cleanMessage;
+  }
 
   // =====================================================
   // SAFE NOTIFY LISTENERS
@@ -175,7 +244,7 @@ class AuthProvider extends ChangeNotifier {
   // REGISTER
   // =====================================================
 
-  Future<dynamic> register(
+  Future<Map<String, dynamic>> register(
     String username,
     String gmail,
     String password,
@@ -191,7 +260,6 @@ class AuthProvider extends ChangeNotifier {
 
       debugPrint('[AuthProvider] Register successful');
 
-      // Save user profile after registration
       if (result != null && result['user'] != null) {
         final user = result['user'] as User;
         await _saveUserProfileUseCase.execute(
@@ -210,7 +278,7 @@ class AuthProvider extends ChangeNotifier {
       return result;
     } catch (error) {
       debugPrint('[AuthProvider] Registration failed: $error');
-      throw Exception(error.toString());
+      rethrow;
     }
   }
 
@@ -228,7 +296,6 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _saveUserProfileUseCase.execute(uid, username, email);
       
-      // Update local profile
       if (_userProfile != null) {
         _userProfile!['username'] = username;
         _userProfile!['email'] = email;
@@ -257,7 +324,7 @@ class AuthProvider extends ChangeNotifier {
     String username,
     String password,
   ) async {
-    debugPrint('[AuthProvider]  Login started: $username');
+    debugPrint('[AuthProvider] Login started: $username');
 
     try {
       final result = await _loginUseCase.execute(
@@ -265,11 +332,11 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
 
-      debugPrint('[AuthProvider]  Login successful: uid=${result?.uid}');
+      debugPrint('[AuthProvider] Login successful: uid=${result?.uid}');
       return result;
     } catch (error) {
-      debugPrint('[AuthProvider]  Login failed: $error');
-      throw Exception(error.toString());
+      debugPrint('[AuthProvider] Login failed: $error');
+      rethrow;
     }
   }
 
@@ -291,7 +358,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } catch (error) {
       debugPrint('[AuthProvider] Logout failed: $error');
-      throw Exception(error.toString());
+      rethrow;
     }
   }
 
@@ -309,7 +376,7 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('[AuthProvider] Reset password successful');
     } catch (error) {
       debugPrint('[AuthProvider] Reset password failed: $error');
-      throw Exception(error.toString());
+      rethrow;
     }
   }
 
@@ -342,13 +409,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Update verified email
       await _updateVerifiedEmailUseCase.execute(
         uid: currentUser.uid,
         email: email.trim(),
       );
 
-      // Save updated profile
       final username = getUsername();
       await _saveUserProfileUseCase.execute(
         currentUser.uid,

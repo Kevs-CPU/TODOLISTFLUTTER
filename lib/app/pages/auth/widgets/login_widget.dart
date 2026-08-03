@@ -1,7 +1,4 @@
-// lib/app/pages/auth/widgets/login_widget.dart
-
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:auto_route/auto_route.dart';
@@ -20,7 +17,6 @@ class LoginWidget extends StatefulWidget {
 
 class _LoginWidgetState extends State<LoginWidget> {
   final _formKey = GlobalKey<FormState>();
-
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -32,9 +28,7 @@ class _LoginWidgetState extends State<LoginWidget> {
 
   String? _localError;
   String? _successMessage;
-
-  bool _showToast = false;
-  String _toastMessage = '';
+  bool _isRegistered = false;
 
   @override
   void dispose() {
@@ -57,6 +51,20 @@ class _LoginWidgetState extends State<LoginWidget> {
         _isResetting = false;
         _localError = null;
         _successMessage = null;
+        _isRegistered = false;
+      });
+    }
+    _resetFields();
+  }
+
+  void _goToLogin() {
+    if (mounted) {
+      setState(() {
+        _isRegistering = false;
+        _isResetting = false;
+        _localError = null;
+        _successMessage = null;
+        _isRegistered = false;
       });
     }
     _resetFields();
@@ -69,28 +77,28 @@ class _LoginWidgetState extends State<LoginWidget> {
         _isRegistering = false;
         _localError = null;
         _successMessage = null;
+        _isRegistered = false;
       });
     }
     _resetFields();
   }
 
-  void _showToastMessage(String message) {
+  void _showSuccessMessage(String message) {
     if (mounted) {
       setState(() {
-        _showToast = true;
-        _toastMessage = message;
+        _isRegistered = true;
+        _successMessage = AuthProvider.cleanErrorMessage(message);
+        _localError = null;
       });
     }
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) setState(() => _showToast = false);
-    });
   }
 
   void _showError(String message) {
     if (mounted) {
       setState(() {
-        _localError = message;
+        _localError = AuthProvider.cleanErrorMessage(message);
         _successMessage = null;
+        _isRegistered = false;
       });
     }
   }
@@ -98,8 +106,9 @@ class _LoginWidgetState extends State<LoginWidget> {
   void _showSuccess(String message) {
     if (mounted) {
       setState(() {
-        _successMessage = message;
+        _successMessage = AuthProvider.cleanErrorMessage(message);
         _localError = null;
+        _isRegistered = false;
       });
     }
   }
@@ -112,6 +121,7 @@ class _LoginWidgetState extends State<LoginWidget> {
         _localError = null;
         _successMessage = null;
         _loading = true;
+        _isRegistered = false;
       });
     }
 
@@ -119,61 +129,47 @@ class _LoginWidgetState extends State<LoginWidget> {
 
     try {
       if (_isResetting) {
-        debugPrint('[LoginWidget] Resetting password for: ${_emailController.text}');
         await authProvider.resetPassword(_emailController.text);
-
         if (mounted) {
           _showSuccess('Password reset email sent! Check your inbox.');
           setState(() => _isResetting = false);
         }
         _resetFields();
-
       } else if (_isRegistering) {
-        debugPrint('[LoginWidget] Registering user: ${_usernameController.text}');
         final result = await authProvider.register(
           _usernameController.text,
           _emailController.text,
           _passwordController.text,
         );
-
         final message = result['message']?.toString() ??
             'You are registered! Please log in.';
-
-        _showToastMessage(message);
+        _showSuccessMessage(message);
         _resetFields();
-
         if (mounted) {
-          setState(() => _isRegistering = false);
+          setState(() {
+            _isResetting = false;
+            _isRegistering = false;
+          });
         }
-
       } else {
-        debugPrint('[LoginWidget] Logging in: ${_usernameController.text}');
         await authProvider.loginWithUsername(
           _usernameController.text,
           _passwordController.text,
         );
-
         if (mounted) {
-          context.router.replace(const DashboardRoute());
+          await context.router.replace(const DashboardRoute());
         }
       }
-
     } on AuthFailure catch (e) {
-      debugPrint('[LoginWidget] AuthFailure: ${e.message}');
       _showError(e.message);
-
     } on ValidationFailure catch (e) {
-      debugPrint('[LoginWidget] ValidationFailure: ${e.message}');
       _showError(e.message);
-
-    } on ServerFailure catch (e) {
-      debugPrint('[LoginWidget] ServerFailure: ${e.message}');
+    } on NetworkFailure catch (e) {
+      _showError(e.message);
+    } on ServerFailure catch (_) {
       _showError('Server error. Please try again later.');
-
     } catch (error) {
-      debugPrint('[LoginWidget] Unknown error: $error');
       _showError(error.toString().replaceFirst('Exception: ', ''));
-
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -181,8 +177,6 @@ class _LoginWidgetState extends State<LoginWidget> {
     }
   }
 
-  // Soft blurred circle accent, like the blobs peeking behind the cards
-  // in the reference design.
   Widget _blurBlob({required double size, required Color color}) {
     return IgnorePointer(
       child: ClipOval(
@@ -200,372 +194,283 @@ class _LoginWidgetState extends State<LoginWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LoginWidgetStyles.backgroundGradient,
         ),
-        child: Stack(
-          children: [
-            // Toast Notification
-            if (_showToast)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 20,
-                left: 20,
-                right: 20,
-                child: Material(
-                  elevation: 4,
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.white,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: LoginWidgetStyles.successColor,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.check_circle,
-                          size: 20,
-                          color: LoginWidgetStyles.successColor,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _toastMessage,
-                            style: const TextStyle(
-                              color: LoginWidgetStyles.successColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            if (mounted) {
-                              setState(() => _showToast = false);
-                            }
-                          },
-                          child: const Icon(
-                            Icons.close,
-                            size: 18,
-                            color: LoginWidgetStyles.successColor,
-                          ),
-                        ),
-                      ],
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: 420,
+                maxHeight: screenHeight * 0.85,
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    top: -40,
+                    left: -30,
+                    child: _blurBlob(
+                      size: 100,
+                      color: LoginWidgetStyles.blobColor.withValues(alpha: 0.5),
                     ),
                   ),
-                ),
-              ),
-
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.center,
-                  children: [
-                    // Decorative blurred blobs, peeking from behind the card
-                    // like in the reference design.
-                    Positioned(
-                      top: -50,
-                      left: -40,
-                      child: _blurBlob(
-                        size: 130,
-                        color: LoginWidgetStyles.blobColor.withValues(alpha: 0.55),
-                      ),
+                  Positioned(
+                    bottom: -40,
+                    right: -30,
+                    child: _blurBlob(
+                      size: 130,
+                      color: LoginWidgetStyles.blobColor.withValues(alpha: 0.5),
                     ),
-                    Positioned(
-                      bottom: -60,
-                      right: -50,
-                      child: _blurBlob(
-                        size: 170,
-                        color: LoginWidgetStyles.blobColor.withValues(alpha: 0.55),
+                  ),
+                  Container(
+                    decoration: LoginWidgetStyles.cardOuterDecoration,
+                    padding: EdgeInsets.all(LoginWidgetStyles.cardBorderWidth),
+                    child: Container(
+                      decoration: LoginWidgetStyles.cardInnerDecoration,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 32,
                       ),
-                    ),
-
-                    // Gradient-bordered card
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      decoration: LoginWidgetStyles.cardOuterDecoration,
-                      padding: EdgeInsets.all(LoginWidgetStyles.cardBorderWidth),
-                      child: Container(
-                        decoration: LoginWidgetStyles.cardInnerDecoration,
-                        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 40),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Header with Icon Badge
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: LoginWidgetStyles.iconBadgeDecoration,
-                                child: const Icon(
-                                  Icons.assignment_turned_in,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: LoginWidgetStyles.iconBadgeDecoration,
+                              child: const Icon(
+                                Icons.assignment_turned_in,
+                                color: Colors.white,
+                                size: 22,
                               ),
-                              const SizedBox(height: 14),
-                              Text(
-                                _isResetting
-                                    ? 'Reset Password'
-                                    : _isRegistering
-                                        ? 'Create Account'
-                                        : 'Todo List',
-                                style: LoginWidgetStyles.titleStyle,
-                              ),
-                              const SizedBox(height: 6),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _isResetting
+                                  ? 'Reset Password'
+                                  : _isRegistering && !_isRegistered
+                                      ? 'Create Account'
+                                      : _isRegistering && _isRegistered
+                                          ? 'Registration Successful'
+                                          : 'Todo List',
+                              style: LoginWidgetStyles.titleStyle,
+                            ),
+                            const SizedBox(height: 4),
+                            if (!_isRegistering || _isRegistered)
                               Text(
                                 _isResetting
                                     ? 'Reset your password'
-                                    : _isRegistering
-                                        ? 'Create your account'
+                                    : _isRegistering && _isRegistered
+                                        ? 'You are registered! Please log in.'
                                         : 'Sign in to continue',
                                 textAlign: TextAlign.center,
-                                style: LoginWidgetStyles.subtitleStyle,
-                              ),
-                              const SizedBox(height: 28),
-
-                              // Message Slot
-                              SizedBox(
-                                height: 22,
-                                child: _localError != null
-                                    ? Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.warning_amber_rounded,
-                                            size: 16,
-                                            color: LoginWidgetStyles.errorColor,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Flexible(
-                                            child: Text(
-                                              _localError!,
-                                              style: LoginWidgetStyles.errorTextStyle,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
+                                style: _isRegistering && _isRegistered
+                                    ? TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.green.shade600,
                                       )
-                                    : (_successMessage != null
-                                        ? Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              const Icon(
-                                                Icons.check_circle,
-                                                size: 16,
-                                                color: LoginWidgetStyles.successColor,
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Flexible(
-                                                child: Text(
-                                                  _successMessage!,
-                                                  style: LoginWidgetStyles.successTextStyle,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                        : const SizedBox.shrink()),
+                                    : LoginWidgetStyles.subtitleStyle,
                               ),
-                              const SizedBox(height: 12),
-
-                              // USERNAME FIELD
-                              if (!_isResetting) ...[
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Username',
-                                    style: LoginWidgetStyles.labelStyle,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                TextFormField(
-                                  controller: _usernameController,
-                                  enabled: !_loading,
-                                  style: const TextStyle(
-                                    color: LoginWidgetStyles.inputTextColor,
-                                    fontSize: 14.5,
-                                  ),
-                                  keyboardType: TextInputType.text,
-                                  autofillHints: const [AutofillHints.username],
-                                  decoration: LoginWidgetStyles.inputDecoration(
-                                    hint: 'Enter your username',
-                                    prefixIcon: const Icon(
-                                      Icons.person_outline,
-                                      size: 16,
-                                      color: LoginWidgetStyles.iconColor,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Username is required';
-                                    }
-                                    if (value.length < 3 || value.length > 20) {
-                                      return 'Username must be 3-20 characters';
-                                    }
-                                    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
-                                      return 'Username can only contain letters, numbers, and underscores';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 18),
-                              ],
-
-                              // EMAIL FIELD
-                              if (_isRegistering || _isResetting) ...[
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Email Address',
-                                    style: LoginWidgetStyles.labelStyle,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                TextFormField(
-                                  controller: _emailController,
-                                  enabled: !_loading,
-                                  style: const TextStyle(
-                                    color: LoginWidgetStyles.inputTextColor,
-                                    fontSize: 14.5,
-                                  ),
-                                  keyboardType: TextInputType.emailAddress,
-                                  autofillHints: const [AutofillHints.email],
-                                  decoration: LoginWidgetStyles.inputDecoration(
-                                    hint: 'example@gmail.com',
-                                    prefixIcon: const Icon(
-                                      Icons.mail_outline,
-                                      size: 16,
-                                      color: LoginWidgetStyles.iconColor,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Email is required';
-                                    }
-                                    if (!value.contains('@') || !value.contains('.')) {
-                                      return 'Enter a valid email address';
-                                    }
-                                    final emailRegex = RegExp(
-                                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                                    );
-                                    if (!emailRegex.hasMatch(value)) {
-                                      return 'Please enter a valid email address';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 18),
-                              ],
-
-                              // Password
-                              if (!_isResetting) ...[
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Password',
-                                    style: LoginWidgetStyles.labelStyle,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                TextFormField(
-                                  controller: _passwordController,
-                                  enabled: !_loading,
-                                  style: const TextStyle(
-                                    color: LoginWidgetStyles.inputTextColor,
-                                    fontSize: 14.5,
-                                  ),
-                                  obscureText: !_showPassword,
-                                  autofillHints: [
-                                    _isRegistering
-                                        ? AutofillHints.newPassword
-                                        : AutofillHints.password
-                                  ],
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter your password',
-                                    hintStyle: const TextStyle(
-                                      color: LoginWidgetStyles.inputHintColor,
-                                      fontSize: 14.5,
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.lock_outline,
-                                      size: 16,
-                                      color: LoginWidgetStyles.iconColor,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _showPassword
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        size: 16,
-                                        color: LoginWidgetStyles.iconColor,
-                                      ),
-                                      onPressed: _loading
-                                          ? null
-                                          : () => setState(
-                                              () => _showPassword = !_showPassword,
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              height: 20,
+                              child: _localError != null
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.warning_amber_rounded,
+                                          size: 14,
+                                          color: LoginWidgetStyles.errorColor,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            _localError!,
+                                            style: LoginWidgetStyles.errorTextStyle,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : (_successMessage != null
+                                      ? Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.check_circle,
+                                              size: 14,
+                                              color: LoginWidgetStyles.successColor,
                                             ),
+                                            const SizedBox(width: 4),
+                                            Flexible(
+                                              child: Text(
+                                                _successMessage!,
+                                                style: LoginWidgetStyles.successTextStyle,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : const SizedBox.shrink()),
+                            ),
+                            const SizedBox(height: 10),
+                            if (!_isResetting && !_isRegistered) ...[
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Username',
+                                  style: LoginWidgetStyles.labelStyle,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              TextFormField(
+                                controller: _usernameController,
+                                enabled: !_loading,
+                                style: const TextStyle(
+                                  color: LoginWidgetStyles.inputTextColor,
+                                  fontSize: 14,
+                                ),
+                                keyboardType: TextInputType.text,
+                                autofillHints: const [AutofillHints.username],
+                                decoration: LoginWidgetStyles.inputDecoration(
+                                  hint: 'Enter your username',
+                                  prefixIcon: const Icon(
+                                    Icons.person_outline,
+                                    size: 16,
+                                    color: LoginWidgetStyles.iconColor,
+                                  ),
+                                ),
+                                validator: AuthProvider.validateUsername,
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+                            if ((_isRegistering || _isResetting) && !_isRegistered) ...[
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Email Address',
+                                  style: LoginWidgetStyles.labelStyle,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              TextFormField(
+                                controller: _emailController,
+                                enabled: !_loading,
+                                style: const TextStyle(
+                                  color: LoginWidgetStyles.inputTextColor,
+                                  fontSize: 14,
+                                ),
+                                keyboardType: TextInputType.emailAddress,
+                                autofillHints: const [AutofillHints.email],
+                                decoration: LoginWidgetStyles.inputDecoration(
+                                  hint: 'example@gmail.com',
+                                  prefixIcon: const Icon(
+                                    Icons.mail_outline,
+                                    size: 16,
+                                    color: LoginWidgetStyles.iconColor,
+                                  ),
+                                ),
+                                validator: AuthProvider.validateEmail,
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+                            if (!_isResetting && !_isRegistered) ...[
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Password',
+                                  style: LoginWidgetStyles.labelStyle,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              TextFormField(
+                                controller: _passwordController,
+                                enabled: !_loading,
+                                style: const TextStyle(
+                                  color: LoginWidgetStyles.inputTextColor,
+                                  fontSize: 14,
+                                ),
+                                obscureText: !_showPassword,
+                                autofillHints: [
+                                  _isRegistering
+                                      ? AutofillHints.newPassword
+                                      : AutofillHints.password
+                                ],
+                                decoration: InputDecoration(
+                                  hintText: 'Enter your password',
+                                  hintStyle: const TextStyle(
+                                    color: LoginWidgetStyles.inputHintColor,
+                                    fontSize: 14,
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.lock_outline,
+                                    size: 16,
+                                    color: LoginWidgetStyles.iconColor,
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _showPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      size: 16,
+                                      color: LoginWidgetStyles.iconColor,
                                     ),
-                                    filled: true,
-                                    fillColor: LoginWidgetStyles.inputBackground,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 38,
-                                      vertical: 11,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: LoginWidgetStyles.inputBorder,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: LoginWidgetStyles.inputBorder,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: LoginWidgetStyles.accentColor,
-                                        width: 1.5,
-                                      ),
+                                    onPressed: _loading
+                                        ? null
+                                        : () => setState(
+                                            () => _showPassword = !_showPassword,
+                                          ),
+                                  ),
+                                  filled: true,
+                                  fillColor: LoginWidgetStyles.inputBackground,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 34,
+                                    vertical: 10,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: LoginWidgetStyles.inputBorder,
+                                      width: 1.5,
                                     ),
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Password is required';
-                                    }
-                                    if (value.length < 6) {
-                                      return 'Password must be at least 6 characters';
-                                    }
-                                    if (_isRegistering && value.length < 8) {
-                                      return 'Password must be at least 8 characters for registration';
-                                    }
-                                    return null;
-                                  },
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: LoginWidgetStyles.inputBorder,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: LoginWidgetStyles.accentColor,
+                                      width: 1.5,
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
-                              ],
-                              const SizedBox(height: 18),
-
-                              // Submit Button — floating white pill w/ shadow
+                                validator: (value) => AuthProvider.validatePassword(
+                                  value,
+                                  isRegistering: _isRegistering,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                            ],
+                            const SizedBox(height: 14),
+                            if (!_isRegistered)
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
@@ -580,7 +485,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                                       disabled: _loading,
                                     ),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 13),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
                                       alignment: Alignment.center,
                                       child: Text(
                                         _loading
@@ -596,19 +501,45 @@ class _LoginWidgetState extends State<LoginWidget> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 20),
-
-                              // Footer Buttons — plain "Cancel"-style links
-                              if (!_isResetting)
-                                TextButton(
-                                  onPressed: _loading ? null : _toggleMode,
-                                  child: Text(
-                                    _isRegistering
-                                        ? 'Already have an account? Sign in'
-                                        : "Don't have an account? Sign up",
-                                    style: LoginWidgetStyles.toggleButtonStyle,
+                            if (_isRegistered) ...[
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _goToLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green.shade600,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    'Go to Login',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            if (!_isResetting && !_isRegistered)
+                              TextButton(
+                                onPressed: _loading ? null : _toggleMode,
+                                child: Text(
+                                  _isRegistering
+                                      ? 'Already have an account? Sign in'
+                                      : "Don't have an account? Sign up",
+                                  style: LoginWidgetStyles.toggleButtonStyle,
+                                ),
+                              ),
+                            if (!_isRegistered)
                               TextButton(
                                 onPressed: _loading ? null : _toggleReset,
                                 child: Text(
@@ -618,16 +549,15 @@ class _LoginWidgetState extends State<LoginWidget> {
                                   style: LoginWidgetStyles.toggleButtonStyle,
                                 ),
                               ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
