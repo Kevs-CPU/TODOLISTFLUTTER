@@ -6,19 +6,31 @@ class LoginWidgetStyles {
   // ===================================================
   // COLORS
   // ===================================================
-  static const Color backgroundStart = Color(0xFF0F172A);
-  static const Color backgroundEnd = Color(0xFF1E293B);
-  static const Color accentColor = Color(0xFF3B82F6);
-  static const Color titleColor = Colors.white;
-  static const Color subtitleColor = Color(0xFF94A3B8);
-  static const Color labelColor = Color(0xFFE2E8F0);
-  static const Color iconColor = Color(0xFF94A3B8);
-  static const Color inputBorder = Color(0xFF334155);
-  static const Color inputBackground = Color(0xFF1E293B);
-  static const Color inputTextColor = Colors.white;
-  static const Color inputHintColor = Color(0xFF64748B);
+  static const Color backgroundStart = Color(0xFFEAFBFF);
+  static const Color backgroundEnd = Color(0xFF49C5F1);
+
+  static const Color accentColor = Color(0xFF2F9BE0);
+  static const Color titleColor = Color(0xFF14507D);
+  static const Color subtitleColor = Color(0xFF64748B);
+  static const Color labelColor = Color(0xFF334155);
+  static const Color iconColor = Color(0xFF7B93A8);
+
+  // Card / inputs — light theme now instead of dark navy
+  static const Color cardColor = Color.fromARGB(255, 217, 243, 250);
+  static const Color inputBorder = Color(0xFFDCE6F0);
+  static const Color inputBackground = Color(0xFFF3F7FB);
+  static const Color inputTextColor = Color(0xFF1E293B);
+  static const Color inputHintColor = Color(0xFF9FB3C8);
+
   static const Color errorColor = Color(0xFFEF4444);
   static const Color successColor = Color(0xFF22C55E);
+
+  // Gradient border colors (orange → blue diagonal, like the reference cards)
+  static const Color borderGradientStart = Color.fromARGB(255, 252, 251, 251);
+  static const Color borderGradientEnd = Color.fromARGB(255, 251, 251, 252);
+
+  // Decorative blurred "blob" accents
+  static const Color blobColor = Color(0xFF3FA9F5);
 
   // ===================================================
   // GRADIENTS
@@ -26,17 +38,44 @@ class LoginWidgetStyles {
   static const LinearGradient backgroundGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [backgroundStart, backgroundEnd],
+    colors: [Color.fromARGB(255, 166, 225, 238), backgroundEnd],
+  );
+
+  static const LinearGradient cardBorderGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [borderGradientStart, borderGradientEnd],
+  );
+
+  static const LinearGradient buttonGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Colors.white, Color(0xFFF1F5F9)],
   );
 
   // ===================================================
-  // CARD DECORATION - WALANG CARD (Transparent)
+  // CARD SHAPE
   // ===================================================
-  static BoxDecoration cardDecoration = BoxDecoration(
-    color: Colors.transparent,
-    borderRadius: BorderRadius.circular(0),
-    boxShadow: [],
-  );
+  static const double cardBorderRadius = 28;
+  static const double cardBorderWidth = 1.6;
+  static double get cardInnerRadius => cardBorderRadius - cardBorderWidth;
+
+  static BoxDecoration get cardOuterDecoration => BoxDecoration(
+        gradient: cardBorderGradient,
+        borderRadius: BorderRadius.circular(cardBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.18),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      );
+
+  static BoxDecoration get cardInnerDecoration => BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(cardInnerRadius),
+      );
 
   // ===================================================
   // ICON BADGE
@@ -54,19 +93,20 @@ class LoginWidgetStyles {
   );
 
   // ===================================================
-  // TEXT STYLES - White text for dark background
+  // TEXT STYLES — dark navy on light background now
   // ===================================================
   static const TextStyle titleStyle = TextStyle(
-    fontSize: 28,
-    fontWeight: FontWeight.w700,
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
     color: titleColor,
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   );
 
   static const TextStyle subtitleStyle = TextStyle(
-    fontSize: 15,
+    fontSize: 14.5,
     color: subtitleColor,
     fontWeight: FontWeight.w400,
+    height: 1.4,
   );
 
   static const TextStyle labelStyle = TextStyle(
@@ -87,14 +127,15 @@ class LoginWidgetStyles {
     fontWeight: FontWeight.w500,
   );
 
+  // "Cancel"-style plain link text, like the reference card
   static const TextStyle toggleButtonStyle = TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.w500,
-    color: accentColor,
+    color: subtitleColor,
   );
 
   // ===================================================
-  // INPUT DECORATION - Dark theme with WHITE text
+  // INPUT DECORATION — light theme
   // ===================================================
   static InputDecoration inputDecoration({
     required String hint,
@@ -103,7 +144,7 @@ class LoginWidgetStyles {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(
+      hintStyle: const TextStyle(
         color: inputHintColor,
         fontSize: 14,
         fontWeight: FontWeight.w400,
@@ -113,50 +154,44 @@ class LoginWidgetStyles {
       filled: true,
       fillColor: inputBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      //  Style for the text inside input
       labelStyle: const TextStyle(color: inputTextColor),
-      //  Style for the input text
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: inputBorder, width: 1),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: inputBorder, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: accentColor, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: errorColor, width: 1),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: errorColor, width: 2),
       ),
     );
   }
 
   // ===================================================
-  // BUTTON DECORATION
+  // BUTTON DECORATION — floating white pill, like "Subscribe"
   // ===================================================
   static BoxDecoration buttonDecoration({bool disabled = false}) {
     return BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
-      ),
-      borderRadius: BorderRadius.circular(10),
+      gradient: buttonGradient,
+      borderRadius: BorderRadius.circular(999),
       boxShadow: disabled
           ? []
           : [
               BoxShadow(
-                color: accentColor.withValues(alpha: 0.3),
+                color: accentColor.withValues(alpha: 0.35),
                 blurRadius: 24,
-                offset: const Offset(0, 8),
+                offset: const Offset(0, 10),
               ),
             ],
     );
@@ -164,8 +199,8 @@ class LoginWidgetStyles {
 
   static const TextStyle buttonTextStyle = TextStyle(
     fontSize: 15,
-    fontWeight: FontWeight.w600,
-    color: Colors.white,
-    letterSpacing: 0.5,
+    fontWeight: FontWeight.w700,
+    color: titleColor,
+    letterSpacing: 0.3,
   );
 }
